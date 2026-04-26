@@ -1,8 +1,20 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
+import os
 
+# ✅ Create app
 app = FastAPI()
+
+# ✅ FIX: Add CORS (VERY IMPORTANT)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # allow all (you can restrict later)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 🔹 Load models
 reg_model = joblib.load("reg_model.pkl")
@@ -23,7 +35,7 @@ def predict_footprint(input_data):
     return float(footprint), str(impact)
 
 
-# 🔹 Suggestion system (your smart logic)
+# 🔹 Suggestion system
 def suggest(data):
     suggestions = []
 
@@ -48,22 +60,25 @@ def suggest(data):
     return suggestions
 
 
-# 🔹 API Endpoint
+# 🔹 Routes
 @app.get("/")
 def home():
     return {"message": "Carbon AI API running 🚀"}
+
+
 @app.post("/predict")
 def predict(data: dict):
     footprint, impact = predict_footprint(data)
     suggestions = suggest(data)
 
     return {
-    "carbon_footprint": round(float(footprint), 2),
-    "impact": impact,
-    "suggestions": suggestions
+        "carbon_footprint": round(float(footprint), 2),
+        "impact": impact,
+        "suggestions": suggestions
     }
-import os
 
+
+# 🔹 Run server (for local + Render)
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
